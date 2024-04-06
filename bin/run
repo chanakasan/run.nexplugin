@@ -1,0 +1,33 @@
+#!/bin/bash
+
+main() {
+  local main_cmd="run $1 $2 $3"
+  local file_1=$1'_'$2'_'$3.sh
+  local file_2=$1'_'$2.sh
+  local file_3=$1.sh
+  local path_1=$(find $nex_run_path/src -type f -name "$file_1")
+  local path_2=$(find $nex_run_path/src -type f -name "$file_2")
+  local path_3=$(find $nex_run_path/src -type f -name "$file_3")
+  local cmd2=_ed_$a1
+  if [ -z "$1" ]; then
+    print_usage
+    exit 1
+  fi
+
+  if [ -f "$path_1" ]; then
+    bash $path_1 ${@:4}
+  elif [ -f "$path_2" ]; then
+    bash $path_2 ${@:3}
+  elif [ -f "$path_3" ]; then
+    bash $path_3 ${@:2}
+  else
+    echo " command not found: $main_cmd"
+  fi
+}
+
+print_usage() {
+  echo " Usage: run <a1> <a2> <a3>"
+  echo
+}
+
+main $@
