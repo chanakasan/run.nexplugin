@@ -5,7 +5,10 @@ main() {
 }
 
 create_vm() {
-  doctl compute droplet create $vm_name --size s-2vcpu-4gb --image ubuntu-20-04-x64 --region sgp1 --ssh-keys $ssh_key_print --wait
+  echo " Creating VM..."
+  echo "Please visit: https://cloud.digitalocean.com/droplets"
+  echo
+  doctl compute droplet create $vm_name --size s-2vcpu-4gb --image ubuntu-20-04-x64 --region sgp1 --ssh-keys $ssh_key_print
 }
 
 main $@
