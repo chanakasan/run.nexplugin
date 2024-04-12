@@ -1,1 +1,0 @@
-doctl compute droplet list
