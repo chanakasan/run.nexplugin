@@ -9,48 +9,36 @@ main() {
   local args_2=${@:3}
   local args_3=${@:2}
 
+  exit_if_empty $1
+  try_scripts "$PWD/.local/script"
+  try_scripts "$HOME/user/script"
+  echo " cmd not found: $main_cmd"
+}
+
+exit_if_empty() {
   if [ -z "$1" ]; then
     print_usage
     exit 1
   fi
-
-  if try_local_script $file_1 $args_1; then
-    :
-  elif try_local_script $file_2 $args_2; then
-    :
-  elif try_local_script $file_3 $args_3; then
-    :
-  elif try_user_script $file_1 $args_1; then
-    :
-  elif try_user_script $file_2 $args_2; then
-    :
-  elif try_user_script $file_3 $args_3; then
-    :
-  else
-    echo " command not found: $main_cmd"
-  fi
 }
 
-try_local_script() {
-  local base_path="$PWD/.local/script"
-  try_script $1 $base_path ${@:2}
-}
-
-try_user_script() {
-  local base_path="$HOME/user_script"
-  try_script $1 $base_path ${@:2}
+try_scripts() {
+  local base_path="$1"
+  try_script $base_path $file_1 $args_1
+  try_script $base_path $file_2 $args_2
+  try_script $base_path $file_3 $args_3
 }
 
 try_script() {
-  local base_path="$2"
+  local base_path="$1"
   if [ ! -d $base_path ]; then
     return 1
   fi
-  local file=$1
-  local path_1=$(find $base_path -type f -name "$file")
-  if [ -f "$path_1" ]; then
-    bash $path_1 ${@:3}
-    return 0
+  local name=$2
+  local file=$(find $base_path -type f -name "$name")
+  if [ -f "$file" ]; then
+    bash $file ${@:3}
+    exit $?
   else
     return 1
   fi
