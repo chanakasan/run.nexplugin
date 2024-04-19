@@ -8,16 +8,21 @@ main() {
   local args_1=${@:4}
   local args_2=${@:3}
   local args_3=${@:2}
-
-  exit_if_empty $1
+  
+  exit_if_empty $1 "run: argument required"
+  try_commands $@
   try_scripts "$PWD/.local/script"
   try_scripts "$HOME/user/script"
+  not_found
+}
+
+not_found() {
   echo " cmd not found: $main_cmd"
 }
 
 exit_if_empty() {
   if [ -z "$1" ]; then
-    print_usage
+    echo " $2"
     exit 1
   fi
 }
@@ -40,12 +45,34 @@ try_script() {
     bash $file ${@:3}
     exit $?
   else
-    return 1
+    return
   fi
+}
+
+try_cmd() {
+  if command -v $1 &> /dev/null; then
+    $1 ${@:2}
+    exit $?
+  else
+    return
+  fi
+}
+
+try_commands() {
+  try_cmd $1 ${@:2}
+}
+
+get_root() {
+  echo $HOME/user/script
 }
 
 print_usage() {
   echo " Usage: run <word1> <word2> <word3>"
+  echo
+}
+
+about() {
+  echo "run.plugin"
   echo
 }
 
