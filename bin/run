@@ -1,37 +1,23 @@
 #!/bin/bash
 
+# debug_on=1
+
 main() {
-  local main_cmd="run $1 $2 $3"
-  local file_1=$1'_'$2'_'$3.sh
-  local file_2=$1'_'$2.sh
-  local file_3=$1.sh
-  local args_1=${@:4}
-  local args_2=${@:3}
-  local args_3=${@:2}
-  
-  exit_if_empty $1 "run: argument required"
-  try_commands $@
-  try_scripts "$PWD/.local/script"
-  try_scripts "$HOME/user/script"
+  local main_cmd="run $*"
+  local args="$*"
+  local input=$(create_key "$args")
+  exit_if_empty $1
+  try_script "$PWD/.local/script" $input
+  try_script "$HOME/user/script" $input
   not_found
 }
 
-not_found() {
-  echo " cmd not found: $main_cmd"
-}
-
-exit_if_empty() {
-  if [ -z "$1" ]; then
-    echo " $2"
-    exit 1
-  fi
-}
-
-try_scripts() {
-  local base_path="$1"
-  try_script $base_path $file_1 $args_1
-  try_script $base_path $file_2 $args_2
-  try_script $base_path $file_3 $args_3
+create_key() {
+  local key="$1"
+  key=${key//_/}
+  key=${key//-/}
+  key=${key// /}
+  echo $key
 }
 
 try_script() {
@@ -39,41 +25,68 @@ try_script() {
   if [ ! -d $base_path ]; then
     return 1
   fi
-  local name=$2
-  local file=$(find $base_path -type f -name "$name")
+  build_files_index $base_path
+  local key="$2"
+  local value="${files_index[$key]}"
+  local file=$base_path/$value
+  log $key
+  log $value
+  log $file
   if [ -f "$file" ]; then
-    bash $file ${@:3}
+    bash "$file"
     exit $?
   else
     return
   fi
-}
-
-try_cmd() {
-  if command -v $1 &> /dev/null; then
-    $1 ${@:2}
-    exit $?
-  else
-    return
-  fi
-}
-
-try_commands() {
-  try_cmd $1 ${@:2}
-}
-
-get_root() {
-  echo $HOME/user/script
 }
 
 print_usage() {
-  echo " Usage: run <word1> <word2> <word3>"
+  echo " Usage: @ <1> <2> <3> ..."
   echo
 }
 
-about() {
-  echo "run.plugin"
-  echo
+not_found() {
+  echo " not found: <$args.sh>"
+}
+
+exit_if_empty() {
+  if [ -z "$1" ]; then
+    echo " argument required"
+    print_usage
+    exit 1
+  fi
+}
+
+build_files_index() {
+  local basepath="$1"
+  exit_if_empty $basepath
+  log build_files_index
+  declare -g -A files_index
+  while IFS= read -r -d '' file; do
+    filename=$(basename -s.sh "$file")
+    key=$(create_key "$filename")
+    files_index["$key"]=$(basename "$file")
+  done < <(find $basepath  -type f -name "*.sh" -print0)
+}
+
+print_files_index() {
+  for key in "${!files_index[@]}"; do
+    echo "$key => ${files_index[$key]}"
+  done
+}
+
+log() {
+  if [ -z "$debug_on" ]; then
+    return
+  fi
+  echo " $*"
+}
+
+dvar() {
+  if [ -z "$debug_on" ]; then
+    return
+  fi
+  echo " $1: <${!1}>"
 }
 
 main $@
