@@ -26,12 +26,13 @@ try_script() {
     return 1
   fi
   build_files_index $base_path
+  print_files_index
   local key="$2"
   local value="${files_index[$key]}"
-  local file=$base_path/$value
-  log $key
-  log $value
-  log $file
+  local file=$value
+  log key: $key
+  log value: $value
+  log file: $file
   if [ -f "$file" ]; then
     bash "$file"
     exit $?
@@ -65,11 +66,15 @@ build_files_index() {
   while IFS= read -r -d '' file; do
     filename=$(basename -s.sh "$file")
     key=$(create_key "$filename")
-    files_index["$key"]=$(basename "$file")
+    files_index["$key"]=$file
   done < <(find $basepath  -type f -name "*.sh" -print0)
 }
 
 print_files_index() {
+  if [ -z "$debug_on" ]; then
+    return
+  fi
+  echo "---------------------------------"
   for key in "${!files_index[@]}"; do
     echo "$key => ${files_index[$key]}"
   done
